@@ -86,13 +86,10 @@ Item {
                 implicitHeight: Config.osd.sizes.sliderHeight
 
                 function onWheel(event: WheelEvent) {
-                    const monitor = root.monitor;
-                    if (!monitor)
-                        return;
                     if (event.angleDelta.y > 0)
-                        monitor.setBrightness(monitor.brightness + Config.services.brightnessIncrement);
+                        Brightness.increaseBrightness();
                     else if (event.angleDelta.y < 0)
-                        monitor.setBrightness(monitor.brightness - Config.services.brightnessIncrement);
+                        Brightness.decreaseBrightness();
                 }
 
                 FilledSlider {

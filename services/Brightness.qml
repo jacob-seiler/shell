@@ -7,6 +7,7 @@ import qs.components.misc
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import Caelestia.Internal
 
 Singleton {
     id: root
@@ -57,12 +58,12 @@ Singleton {
         const monitor = getMonitor("active") ?? (monitors.length > 0 ? monitors[0] : null);
         if (!monitor)
             return;
-        const targetBrightness = luxToBrightness(currentLux);
+        const targetBrightness = Math.max(0, Math.min(1, luxToBrightness(currentLux) + monitor.userOffset));
         if (Math.abs(targetBrightness - monitor.brightness) < 0.02)
             return;
         lastAppliedLux = currentLux;
         monitor.suppressOsd = true;
-        monitor.setBrightness(targetBrightness);
+        monitor.setAutoTarget(targetBrightness);
         Qt.callLater(() => { monitor.suppressOsd = false; });
     }
 
@@ -72,22 +73,32 @@ Singleton {
         Config.save();
         if (enabled) {
             lastAppliedLux = -1;
+            for (const m of monitors)
+                m.userOffset = 0;
             alsProc.running = true;
         }
     }
 
     function increaseBrightness(): void {
-        setAutoBrightness(false);
         const monitor = getMonitor("active");
-        if (monitor)
-            monitor.setBrightness(monitor.brightness + Config.services.brightnessIncrement);
+        if (!monitor)
+            return;
+        monitor.setBrightness(monitor.brightness + Config.services.brightnessIncrement);
+        if (autoBrightness)
+            monitor.userOffset = monitor.brightness - luxToBrightness(currentLux);
+        else
+            setAutoBrightness(false);
     }
 
     function decreaseBrightness(): void {
-        setAutoBrightness(false);
         const monitor = getMonitor("active");
-        if (monitor)
-            monitor.setBrightness(monitor.brightness - Config.services.brightnessIncrement);
+        if (!monitor)
+            return;
+        monitor.setBrightness(monitor.brightness - Config.services.brightnessIncrement);
+        if (autoBrightness)
+            monitor.userOffset = monitor.brightness - luxToBrightness(currentLux);
+        else
+            setAutoBrightness(false);
     }
 
     onCurrentLuxChanged: applyAutoLux()
@@ -145,6 +156,15 @@ Singleton {
         onTriggered: alsProc.running = true
     }
 
+    LogindManager {
+        onResumed: {
+            root.lastAppliedLux = -1;
+            for (const m of root.monitors)
+                m.userOffset = 0;
+            alsProc.running = true;
+        }
+    }
+
     CustomShortcut {
         name: "brightnessUp"
         description: "Increase brightness"
@@ -175,7 +195,6 @@ Singleton {
 
         // Handles brightness value like brightnessctl: 0.1, +0.1, 0.1-, 10%, +10%, 10%-
         function setFor(query: string, value: string): string {
-            root.setAutoBrightness(false);
             const monitor = root.getMonitor(query);
             if (!monitor)
                 return "Invalid monitor: " + query;
@@ -206,6 +225,10 @@ Singleton {
                 return `Failed to parse value: ${value}\nExpected: 0.1, +0.1, 0.1-, 10%, +10%, 10%-`;
 
             monitor.setBrightness(targetBrightness);
+            if (root.autoBrightness)
+                monitor.userOffset = monitor.brightness - root.luxToBrightness(root.currentLux);
+            else
+                root.setAutoBrightness(false);
 
             return `Set monitor ${monitor.modelData.name} brightness to ${+monitor.brightness.toFixed(2)}`;
         }
@@ -220,14 +243,27 @@ Singleton {
         readonly property bool isAppleDisplay: root.appleDisplayPresent && modelData.model.startsWith("StudioDisplay")
         property real brightness
         property bool suppressOsd: false
+        property real userOffset: 0
         property real queuedBrightness: NaN
         property real animatedHWBrightness: 0
         property int lastAppliedRounded: -1
         property bool hwBrightnessInitialized: false
 
-        Behavior on animatedHWBrightness {
-            enabled: monitor.hwBrightnessInitialized
-            Anim {}
+        // Manual brightness change: short animation matching normal UI transitions
+        readonly property NumberAnimation hwAnim: NumberAnimation {
+            target: monitor
+            property: "animatedHWBrightness"
+            duration: Appearance.anim.durations.normal
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Appearance.anim.curves.standard
+        }
+
+        // Auto-brightness adjustment: slow animation so the screen eases to the new level
+        readonly property NumberAnimation hwAutoAnim: NumberAnimation {
+            target: monitor
+            property: "animatedHWBrightness"
+            duration: 5000
+            easing.type: Easing.InOutSine
         }
 
         onAnimatedHWBrightnessChanged: {
@@ -284,8 +320,46 @@ Singleton {
                 Quickshell.execDetached(["asdbctl", "set", rounded]);
             else if (isDdc)
                 Quickshell.execDetached(["ddcutil", "-b", busNum, "setvcp", "10", rounded]);
-            else
+            else if (hwBrightnessInitialized) {
+                hwAutoAnim.stop();
+                hwAnim.from = animatedHWBrightness;
+                hwAnim.to = value;
+                hwAnim.start();
+            } else {
                 animatedHWBrightness = value;
+            }
+
+            if (isDdc)
+                timer.restart();
+        }
+
+        // Called by auto-brightness: animates slowly so the screen eases to the new level.
+        // Manual calls to setBrightness() interrupt this animation.
+        function setAutoTarget(value: real): void {
+            value = Math.max(0, Math.min(1, value));
+            const rounded = Math.round(value * 100);
+            if (Math.round(brightness * 100) === rounded)
+                return;
+
+            if (isDdc && timer.running) {
+                queuedBrightness = value;
+                return;
+            }
+
+            brightness = value;
+
+            if (isAppleDisplay)
+                Quickshell.execDetached(["asdbctl", "set", rounded]);
+            else if (isDdc)
+                Quickshell.execDetached(["ddcutil", "-b", busNum, "setvcp", "10", rounded]);
+            else if (hwBrightnessInitialized) {
+                hwAnim.stop();
+                hwAutoAnim.from = animatedHWBrightness;
+                hwAutoAnim.to = value;
+                hwAutoAnim.start();
+            } else {
+                animatedHWBrightness = value;
+            }
 
             if (isDdc)
                 timer.restart();
