@@ -98,7 +98,8 @@ Item {
         target: root.monitor
 
         function onBrightnessChanged(): void {
-            root.show();
+            if (!root.monitor?.suppressOsd)
+                root.show();
             root.brightness = root.monitor?.brightness ?? 0;
         }
     }

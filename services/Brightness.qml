@@ -14,6 +14,9 @@ Singleton {
     property list<var> ddcMonitors: []
     readonly property list<Monitor> monitors: variants.instances
     property bool appleDisplayPresent: false
+    property bool autoBrightness: Config.services.autoBrightness ?? false
+    property int currentLux: 0
+    property int lastAppliedLux: -1
 
     function getMonitorForScreen(screen: ShellScreen): var {
         return monitors.find(m => m.modelData === screen);
@@ -42,17 +45,52 @@ Singleton {
         return monitors.find(m => m.modelData.name === query);
     }
 
+    function luxToBrightness(lux: int): real {
+        return Math.max(0.1, Math.min(1.0, Math.log10(Math.max(1, lux)) / 4));
+    }
+
+    function applyAutoLux(): void {
+        if (!autoBrightness)
+            return;
+        if (Math.abs(currentLux - lastAppliedLux) <= 20)
+            return;
+        const monitor = getMonitor("active") ?? (monitors.length > 0 ? monitors[0] : null);
+        if (!monitor)
+            return;
+        const targetBrightness = luxToBrightness(currentLux);
+        if (Math.abs(targetBrightness - monitor.brightness) < 0.02)
+            return;
+        lastAppliedLux = currentLux;
+        monitor.suppressOsd = true;
+        monitor.setBrightness(targetBrightness);
+        Qt.callLater(() => { monitor.suppressOsd = false; });
+    }
+
+    function setAutoBrightness(enabled: bool): void {
+        autoBrightness = enabled;
+        Config.services.autoBrightness = enabled;
+        Config.save();
+        if (enabled) {
+            lastAppliedLux = -1;
+            alsProc.running = true;
+        }
+    }
+
     function increaseBrightness(): void {
+        setAutoBrightness(false);
         const monitor = getMonitor("active");
         if (monitor)
             monitor.setBrightness(monitor.brightness + Config.services.brightnessIncrement);
     }
 
     function decreaseBrightness(): void {
+        setAutoBrightness(false);
         const monitor = getMonitor("active");
         if (monitor)
             monitor.setBrightness(monitor.brightness - Config.services.brightnessIncrement);
     }
+
+    onCurrentLuxChanged: applyAutoLux()
 
     onMonitorsChanged: {
         ddcMonitors = [];
@@ -87,6 +125,26 @@ Singleton {
         }
     }
 
+    Process {
+        id: alsProc
+
+        command: ["cat", "/sys/bus/iio/devices/iio:device0/in_illuminance_raw"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const val = parseInt(text.trim());
+                if (!isNaN(val))
+                    root.currentLux = val;
+            }
+        }
+    }
+
+    Timer {
+        interval: 5000
+        repeat: true
+        running: root.autoBrightness
+        onTriggered: alsProc.running = true
+    }
+
     CustomShortcut {
         name: "brightnessUp"
         description: "Increase brightness"
@@ -117,6 +175,7 @@ Singleton {
 
         // Handles brightness value like brightnessctl: 0.1, +0.1, 0.1-, 10%, +10%, 10%-
         function setFor(query: string, value: string): string {
+            root.setAutoBrightness(false);
             const monitor = root.getMonitor(query);
             if (!monitor)
                 return "Invalid monitor: " + query;
@@ -160,6 +219,7 @@ Singleton {
         readonly property string busNum: root.ddcMonitors.find(m => m.connector === modelData.name)?.busNum ?? ""
         readonly property bool isAppleDisplay: root.appleDisplayPresent && modelData.model.startsWith("StudioDisplay")
         property real brightness
+        property bool suppressOsd: false
         property real queuedBrightness: NaN
         property real animatedHWBrightness: 0
         property int lastAppliedRounded: -1

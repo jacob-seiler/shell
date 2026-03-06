@@ -104,6 +104,24 @@ Item {
                 }
             }
         }
+
+        // Auto brightness toggle
+        Item {
+            visible: Config.osd.enableBrightness
+            implicitWidth: Config.osd.sizes.sliderWidth
+            implicitHeight: autoBrightnessBtn.implicitHeight
+
+            IconButton {
+                id: autoBrightnessBtn
+                anchors.horizontalCenter: parent.horizontalCenter
+                toggle: true
+                checked: Brightness.autoBrightness
+                type: IconButton.Tonal
+                icon: "brightness_auto"
+
+                onClicked: Brightness.setAutoBrightness(!Brightness.autoBrightness)
+            }
+        }
     }
 
     component WrappedLoader: Loader {
