@@ -150,6 +150,9 @@ Singleton {
             idle: {
                 lockBeforeSleep: general.idle.lockBeforeSleep,
                 inhibitWhenAudio: general.idle.inhibitWhenAudio,
+                dimBeforeScreenOff: general.idle.dimBeforeScreenOff,
+                dimLevel: general.idle.dimLevel,
+                dimPreviewDuration: general.idle.dimPreviewDuration,
                 timeouts: general.idle.timeouts
             },
             battery: {

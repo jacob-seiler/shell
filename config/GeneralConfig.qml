@@ -16,6 +16,9 @@ JsonObject {
     component Idle: JsonObject {
         property bool lockBeforeSleep: true
         property bool inhibitWhenAudio: true
+        property bool dimBeforeScreenOff: true
+        property real dimLevel: 0.1
+        property int dimPreviewDuration: 10
         property list<var> timeouts: [
             {
                 timeout: 180,

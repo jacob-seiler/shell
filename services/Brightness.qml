@@ -101,6 +101,42 @@ Singleton {
             setAutoBrightness(false);
     }
 
+    function dim(targetLevel: real): void {
+        for (const m of monitors) {
+            if (m.preDimBrightness >= 0)
+                continue;
+            m.preDimBrightness = m.brightness;
+            if (!m.isDdc && !m.isAppleDisplay && m.hwBrightnessInitialized) {
+                m.hwAnim.stop();
+                m.hwAutoAnim.stop();
+                m.hwDimAnim.from = m.animatedHWBrightness;
+                m.hwDimAnim.to = Math.min(m.animatedHWBrightness, targetLevel);
+                m.hwDimAnim.start();
+            } else if (m.isDdc) {
+                Quickshell.execDetached(["ddcutil", "-b", m.busNum, "setvcp", "10", Math.round(targetLevel * 100)]);
+            } else if (m.isAppleDisplay) {
+                Quickshell.execDetached(["asdbctl", "set", Math.round(targetLevel * 101)]);
+            }
+        }
+    }
+
+    function undim(): void {
+        for (const m of monitors) {
+            if (m.preDimBrightness < 0)
+                continue;
+            const restoreTo = m.preDimBrightness;
+            m.preDimBrightness = -1;
+            if (!m.isDdc && !m.isAppleDisplay) {
+                m.hwDimAnim.stop();
+                m.animatedHWBrightness = restoreTo;
+            } else if (m.isDdc) {
+                Quickshell.execDetached(["ddcutil", "-b", m.busNum, "setvcp", "10", Math.round(restoreTo * 100)]);
+            } else if (m.isAppleDisplay) {
+                Quickshell.execDetached(["asdbctl", "set", Math.round(restoreTo * 101)]);
+            }
+        }
+    }
+
     onCurrentLuxChanged: applyAutoLux()
 
     onMonitorsChanged: {
@@ -266,6 +302,16 @@ Singleton {
             easing.type: Easing.InOutSine
         }
 
+        // Dim animation: smoothly dims to a low level before screen-off
+        readonly property NumberAnimation hwDimAnim: NumberAnimation {
+            target: monitor
+            property: "animatedHWBrightness"
+            duration: 2000
+            easing.type: Easing.OutCubic
+        }
+
+        property real preDimBrightness: -1
+
         onAnimatedHWBrightnessChanged: {
             if (isDdc || isAppleDisplay)
                 return;
@@ -304,6 +350,10 @@ Singleton {
         }
 
         function setBrightness(value: real): void {
+            if (preDimBrightness >= 0) {
+                hwDimAnim.stop();
+                preDimBrightness = -1;
+            }
             value = Math.max(0, Math.min(1, value));
             const rounded = Math.round(value * 100);
             if (Math.round(brightness * 100) === rounded)
@@ -336,6 +386,10 @@ Singleton {
         // Called by auto-brightness: animates slowly so the screen eases to the new level.
         // Manual calls to setBrightness() interrupt this animation.
         function setAutoTarget(value: real): void {
+            if (preDimBrightness >= 0) {
+                hwDimAnim.stop();
+                preDimBrightness = -1;
+            }
             value = Math.max(0, Math.min(1, value));
             const rounded = Math.round(value * 100);
             if (Math.round(brightness * 100) === rounded)

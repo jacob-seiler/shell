@@ -17,6 +17,32 @@ Item {
 
     readonly property var monitor: Brightness.getMonitor("active") ?? (Brightness.monitors.length > 0 ? Brightness.monitors[0] : null)
 
+    property bool idleLockBeforeSleep: Config.general.idle.lockBeforeSleep ?? true
+    property bool idleInhibitWhenAudio: Config.general.idle.inhibitWhenAudio ?? true
+    property bool idleDimBeforeScreenOff: Config.general.idle.dimBeforeScreenOff ?? true
+    property int idleLockTimeout: Config.general.idle.timeouts[0]?.timeout ?? 180
+    property int idleScreenOffTimeout: Config.general.idle.timeouts[1]?.timeout ?? 300
+    property int idleSleepTimeout: Config.general.idle.timeouts[2]?.timeout ?? 600
+
+    function saveIdleConfig(): void {
+        Config.general.idle.lockBeforeSleep = root.idleLockBeforeSleep;
+        Config.general.idle.inhibitWhenAudio = root.idleInhibitWhenAudio;
+        Config.general.idle.dimBeforeScreenOff = root.idleDimBeforeScreenOff;
+        const orig = Config.general.idle.timeouts;
+        const timeouts = [];
+        for (let i = 0; i < orig.length; i++) {
+            timeouts.push(Object.assign({}, orig[i]));
+        }
+        if (timeouts.length >= 1)
+            timeouts[0].timeout = root.idleLockTimeout;
+        if (timeouts.length >= 2)
+            timeouts[1].timeout = root.idleScreenOffTimeout;
+        if (timeouts.length >= 3)
+            timeouts[2].timeout = root.idleSleepTimeout;
+        Config.general.idle.timeouts = timeouts;
+        Config.save();
+    }
+
     anchors.fill: parent
 
     StyledFlickable {
@@ -42,6 +68,112 @@ Item {
             SettingsHeader {
                 icon: "brightness_high"
                 title: qsTr("Display")
+            }
+
+            SectionHeader {
+                title: qsTr("Idle")
+                description: qsTr("Configure screen lock and sleep timers")
+            }
+
+            SectionContainer {
+                contentSpacing: Appearance.spacing.normal
+
+                SwitchRow {
+                    label: qsTr("Lock before sleep")
+                    checked: root.idleLockBeforeSleep
+                    onToggled: checked => {
+                        root.idleLockBeforeSleep = checked;
+                        root.saveIdleConfig();
+                    }
+                }
+
+                SwitchRow {
+                    label: qsTr("Stay awake while audio is playing")
+                    checked: root.idleInhibitWhenAudio
+                    onToggled: checked => {
+                        root.idleInhibitWhenAudio = checked;
+                        root.saveIdleConfig();
+                    }
+                }
+
+                SwitchRow {
+                    label: qsTr("Dim before screen off")
+                    checked: root.idleDimBeforeScreenOff
+                    onToggled: checked => {
+                        root.idleDimBeforeScreenOff = checked;
+                        root.saveIdleConfig();
+                    }
+                }
+            }
+
+            SectionContainer {
+                contentSpacing: Appearance.spacing.normal
+
+                SliderInput {
+                    Layout.fillWidth: true
+
+                    label: qsTr("Lock screen after")
+                    value: root.idleLockTimeout / 60
+                    from: 1
+                    to: 60
+                    stepSize: 1
+                    suffix: qsTr(" min")
+                    validator: IntValidator {
+                        bottom: 1
+                        top: 60
+                    }
+                    formatValueFunction: val => Math.round(val).toString()
+                    parseValueFunction: text => parseInt(text)
+
+                    onValueModified: newValue => {
+                        root.idleLockTimeout = newValue * 60;
+                        root.saveIdleConfig();
+                    }
+                }
+
+                SliderInput {
+                    Layout.fillWidth: true
+
+                    label: qsTr("Screen off after")
+                    value: root.idleScreenOffTimeout / 60
+                    from: 1
+                    to: 60
+                    stepSize: 1
+                    suffix: qsTr(" min")
+                    validator: IntValidator {
+                        bottom: 1
+                        top: 60
+                    }
+                    formatValueFunction: val => Math.round(val).toString()
+                    parseValueFunction: text => parseInt(text)
+
+                    onValueModified: newValue => {
+                        root.idleScreenOffTimeout = newValue * 60;
+                        root.saveIdleConfig();
+                    }
+                }
+
+                SliderInput {
+                    Layout.fillWidth: true
+
+                    label: qsTr("Sleep after")
+                    value: root.idleSleepTimeout / 60
+                    from: 1
+                    to: 120
+                    stepSize: 1
+                    suffix: qsTr(" min")
+                    validator: IntValidator {
+                        bottom: 1
+                        top: 120
+                    }
+                    formatValueFunction: val => Math.round(val).toString()
+                    parseValueFunction: text => parseInt(text)
+
+                    onValueModified: newValue => {
+                        root.idleSleepTimeout = newValue * 60;
+                        root.saveIdleConfig();
+                    }
+                }
             }
 
             SectionHeader {
