@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import ".."
 import qs.components
 import qs.components.controls
+import qs.components.containers
 import qs.components.effects
 import qs.components.images
 import qs.services
@@ -24,6 +25,13 @@ GridView {
     model: Wallpapers.list
 
     clip: true
+
+    ScrollBehavior { id: scroll; target: root }
+
+    WheelHandler {
+        acceptedDevices: PointerDevice.TouchPad
+        onWheel: event => scroll.handleWheel(event)
+    }
 
     StyledScrollBar.vertical: StyledScrollBar {
         flickable: root
