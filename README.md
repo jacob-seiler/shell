@@ -25,6 +25,22 @@ Several unnecessary update cycles and over-broad redraws have been eliminated ac
 - The MPRIS position polling timer has been consolidated into the `Players` service so it runs once regardless of how many UI components are open
 - Clock text bindings now use cached properties that only propagate changes when the displayed value actually differs, rather than re-evaluating every second
 
+### Control centre overhaul
+
+The control centre has been redesigned with a navigation rail for switching between panes, including:
+
+- A new **battery pane** showing charge level, status, and estimated time remaining
+- A **launcher pane** for quick access to apps from within the control centre
+- A **wallpaper grid** for browsing and switching wallpapers in-place
+
+### Momentum scrolling
+
+Scroll containers throughout the shell now support momentum (kinetic) scrolling — flicking a scroll area causes it to coast and decelerate naturally rather than stopping immediately.
+
+### App launch mode tracking
+
+The shell now tracks whether each app window was launched in tiled or floating mode, allowing per-app behaviour to be handled correctly when windows are opened.
+
 ### Smooth keyboard brightness transitions
 
 When adjusting screen brightness via keyboard shortcuts, the actual hardware brightness now transitions smoothly to the target value instead of jumping to it instantly. This works by animating an intermediate property that drives incremental `brightnessctl` calls as it interpolates — the same animation that the OSD slider already uses visually, now applied to the hardware value itself. The result is that the physical display brightness eases in and out rather than cutting abruptly.
