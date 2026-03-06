@@ -35,8 +35,37 @@ Singleton {
 
     property bool hadKeyboard
     property string lastSpecialWorkspace: ""
+    property list<string> _appliedFloatingClasses: []
 
     signal configReloaded
+
+    function getFloatingWindowClass(appId: string): string {
+        const entries = DesktopEntries.applications.values;
+        for (let i = 0; i < entries.length; i++) {
+            if (entries[i].id === appId)
+                return entries[i].startupWmClass || appId;
+        }
+        return appId;
+    }
+
+    function syncFloatingRules(): void {
+        const messages = [];
+        const applied = root._appliedFloatingClasses;
+        for (let i = 0; i < applied.length; i++)
+            messages.push(`keyword windowrulev2 unset,float,class:^(${applied[i]})$`);
+
+        const floatingApps = Config.launcher.floatingApps;
+        const newClasses = [];
+        for (let i = 0; i < floatingApps.length; i++) {
+            const cls = root.getFloatingWindowClass(floatingApps[i]);
+            messages.push(`keyword windowrulev2 float,class:^(${cls})$`);
+            newClasses.push(cls);
+        }
+        root._appliedFloatingClasses = newClasses;
+
+        if (messages.length > 0)
+            extras.batchMessage(messages);
+    }
 
     function dispatch(request: string): void {
         Hyprland.dispatch(request);
@@ -83,7 +112,10 @@ Singleton {
         extras.batchMessage(["keyword bindlni ,Caps_Lock,global,caelestia:refreshDevices", "keyword bindlni ,Num_Lock,global,caelestia:refreshDevices"]);
     }
 
-    Component.onCompleted: reloadDynamicConfs()
+    Component.onCompleted: {
+        reloadDynamicConfs();
+        syncFloatingRules();
+    }
 
     onCapsLockChanged: {
         if (!Config.utilities.toasts.capsLockChanged)
@@ -113,6 +145,20 @@ Singleton {
     }
 
     Connections {
+        target: Config
+        function onLoaded() {
+            Qt.callLater(root.syncFloatingRules);
+        }
+    }
+
+    Connections {
+        target: Config.launcher
+        function onFloatingAppsChanged() {
+            root.syncFloatingRules();
+        }
+    }
+
+    Connections {
         target: Hyprland
 
         function onRawEvent(event: HyprlandEvent): void {
@@ -123,6 +169,8 @@ Singleton {
             if (n === "configreloaded") {
                 root.configReloaded();
                 root.reloadDynamicConfs();
+                root._appliedFloatingClasses = [];
+                root.syncFloatingRules();
             } else if (["workspace", "moveworkspace", "activespecial", "focusedmon"].includes(n)) {
                 Hyprland.refreshWorkspaces();
                 Hyprland.refreshMonitors();

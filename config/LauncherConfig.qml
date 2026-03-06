@@ -12,6 +12,7 @@ JsonObject {
     property bool vimKeybinds: false
     property list<string> favouriteApps: []
     property list<string> hiddenApps: []
+    property list<string> floatingApps: []
     property UseFuzzy useFuzzy: UseFuzzy {}
     property Sizes sizes: Sizes {}
 
