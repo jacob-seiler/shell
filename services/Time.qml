@@ -17,6 +17,10 @@ Singleton {
     readonly property string minuteStr: timeComponents[1] ?? ""
     readonly property string amPmStr: timeComponents[2] ?? ""
 
+    readonly property string monthStr: format("MMMM")
+    readonly property string dayStr: format("dd")
+    readonly property string dayOfWeekStr: format("dddd")
+
     function format(fmt: string): string {
         return Qt.formatDateTime(clock.date, fmt);
     }

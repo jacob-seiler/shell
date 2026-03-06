@@ -60,20 +60,14 @@ DeviceDetails {
         id: connectionUpdateTimer
         interval: 500
         repeat: true
-        running: network && network.ssid
+        running: network && network.ssid && !Nmcli.wirelessDeviceDetails
         onTriggered: {
             if (network) {
                 const isActive = network.active || (Nmcli.active && Nmcli.active.ssid === network.ssid);
                 if (isActive) {
-                    if (!Nmcli.wirelessDeviceDetails || Nmcli.wirelessDeviceDetails === null) {
-                        Nmcli.getWirelessDeviceDetails("", () => {});
-                    } else {
-                        connectionUpdateTimer.stop();
-                    }
+                    Nmcli.getWirelessDeviceDetails("", () => {});
                 } else {
-                    if (Nmcli.wirelessDeviceDetails !== null) {
-                        Nmcli.wirelessDeviceDetails = null;
-                    }
+                    connectionUpdateTimer.stop();
                 }
             }
         }
