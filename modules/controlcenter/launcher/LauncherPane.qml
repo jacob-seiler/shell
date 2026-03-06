@@ -25,6 +25,7 @@ Item {
     property var selectedApp: root.session.launcher.active
     property bool hideFromLauncherChecked: false
     property bool favouriteChecked: false
+    property bool floatingChecked: false
 
     anchors.fill: parent
 
@@ -52,6 +53,7 @@ Item {
 
         root.hideFromLauncherChecked = Config.launcher.hiddenApps && Config.launcher.hiddenApps.length > 0 && Strings.testRegexList(Config.launcher.hiddenApps, appId);
         root.favouriteChecked = Config.launcher.favouriteApps && Config.launcher.favouriteApps.length > 0 && Strings.testRegexList(Config.launcher.favouriteApps, appId);
+        root.floatingChecked = Config.launcher.floatingApps && Config.launcher.floatingApps.length > 0 && Config.launcher.floatingApps.indexOf(appId) !== -1;
     }
 
     function saveHiddenApps(isHidden) {
@@ -469,9 +471,11 @@ Item {
                         const appId = displayedApp.id || displayedApp.entry?.id;
                         root.hideFromLauncherChecked = Config.launcher.hiddenApps && Config.launcher.hiddenApps.length > 0 && Strings.testRegexList(Config.launcher.hiddenApps, appId);
                         root.favouriteChecked = Config.launcher.favouriteApps && Config.launcher.favouriteApps.length > 0 && Strings.testRegexList(Config.launcher.favouriteApps, appId);
+                        root.floatingChecked = Config.launcher.floatingApps && Config.launcher.floatingApps.length > 0 && Config.launcher.floatingApps.indexOf(appId) !== -1;
                     } else {
                         root.hideFromLauncherChecked = false;
                         root.favouriteChecked = false;
+                        root.floatingChecked = false;
                     }
                 }
             }
@@ -648,6 +652,49 @@ Item {
                                     Config.launcher.hiddenApps = hiddenApps;
                                     Config.save();
                                 }
+                            }
+                        }
+
+                        SplitButtonRow {
+                            Layout.topMargin: Appearance.spacing.normal
+                            visible: appDetailsLayout.displayedApp !== null
+                            label: qsTr("Launch mode")
+
+                            menuItems: [
+                                MenuItem {
+                                    id: tilingItem
+                                    text: qsTr("Tiling")
+                                    icon: "grid_view"
+                                    property string val: "tiling"
+                                },
+                                MenuItem {
+                                    id: floatingItem
+                                    text: qsTr("Floating")
+                                    icon: "picture_in_picture"
+                                    property string val: "floating"
+                                }
+                            ]
+
+                            active: root.floatingChecked ? floatingItem : tilingItem
+
+                            onSelected: item => {
+                                const app = appDetailsLayout.displayedApp;
+                                if (!app)
+                                    return;
+                                const appId = app.id || app.entry?.id;
+                                const floatingApps = Config.launcher.floatingApps ? [...Config.launcher.floatingApps] : [];
+                                if (item.val === "floating") {
+                                    root.floatingChecked = true;
+                                    if (!floatingApps.includes(appId))
+                                        floatingApps.push(appId);
+                                } else {
+                                    root.floatingChecked = false;
+                                    const index = floatingApps.indexOf(appId);
+                                    if (index !== -1)
+                                        floatingApps.splice(index, 1);
+                                }
+                                Config.launcher.floatingApps = floatingApps;
+                                Config.save();
                             }
                         }
                     }

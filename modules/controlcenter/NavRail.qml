@@ -136,20 +136,7 @@ Item {
         readonly property bool active: root.session.active === label
 
         implicitWidth: background.implicitWidth
-        implicitHeight: background.implicitHeight + smallLabel.implicitHeight + smallLabel.anchors.topMargin
-
-        states: State {
-            name: "expanded"
-            when: root.session.navExpanded
-
-            PropertyChanges {
-                expandedLabel.opacity: 1
-                smallLabel.opacity: 0
-                background.implicitWidth: icon.implicitWidth + icon.anchors.leftMargin * 2 + expandedLabel.anchors.leftMargin + expandedLabel.implicitWidth
-                background.implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
-                item.implicitHeight: background.implicitHeight
-            }
-        }
+        implicitHeight: background.implicitHeight
 
         transitions: Transition {
             Anim {
@@ -170,8 +157,8 @@ Item {
             radius: Appearance.rounding.full
             color: Qt.alpha(Colours.palette.m3secondaryContainer, item.active ? 1 : 0)
 
-            implicitWidth: icon.implicitWidth + icon.anchors.leftMargin * 2
-            implicitHeight: icon.implicitHeight + Appearance.padding.small
+            implicitWidth: icon.implicitWidth + icon.anchors.leftMargin * 2 + expandedLabel.anchors.leftMargin + expandedLabel.implicitWidth
+            implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
             StateLayer {
                 color: item.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
@@ -209,21 +196,9 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.leftMargin: Appearance.spacing.normal
 
-                opacity: 0
+                opacity: 1
                 text: item.label
                 color: item.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                font.capitalization: Font.Capitalize
-            }
-
-            StyledText {
-                id: smallLabel
-
-                anchors.horizontalCenter: icon.horizontalCenter
-                anchors.top: icon.bottom
-                anchors.topMargin: Appearance.spacing.small / 2
-
-                text: item.label
-                font.pointSize: Appearance.font.size.small
                 font.capitalization: Font.Capitalize
             }
         }

@@ -4,6 +4,7 @@ import qs.config
 import qs.utils
 import Caelestia
 import Quickshell
+import Quickshell.Hyprland
 
 Searcher {
     id: root
@@ -11,16 +12,22 @@ Searcher {
     function launch(entry: DesktopEntry): void {
         appDb.incrementFrequency(entry.id);
 
-        if (entry.runInTerminal)
-            Quickshell.execDetached({
-                command: ["app2unit", "--", ...Config.general.apps.terminal, `${Quickshell.shellDir}/assets/wrap_term_launch.sh`, ...entry.command],
-                workingDirectory: entry.workingDirectory
-            });
-        else
-            Quickshell.execDetached({
-                command: ["app2unit", "--", ...entry.command],
-                workingDirectory: entry.workingDirectory
-            });
+        const floatingApps = Config.launcher.floatingApps;
+        const isFloating = floatingApps.length > 0 && floatingApps.indexOf(entry.id) !== -1;
+
+        if (entry.runInTerminal) {
+            const cmd = ["app2unit", "--", ...Config.general.apps.terminal, `${Quickshell.shellDir}/assets/wrap_term_launch.sh`, ...entry.command];
+            if (isFloating)
+                Hyprland.dispatch("exec [float] " + cmd.join(" "));
+            else
+                Quickshell.execDetached({ command: cmd, workingDirectory: entry.workingDirectory });
+        } else {
+            const cmd = ["app2unit", "--", ...entry.command];
+            if (isFloating)
+                Hyprland.dispatch("exec [float] " + cmd.join(" "));
+            else
+                Quickshell.execDetached({ command: cmd, workingDirectory: entry.workingDirectory });
+        }
     }
 
     function search(search: string): list<var> {

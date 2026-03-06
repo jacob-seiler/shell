@@ -27,6 +27,8 @@ Singleton {
     property alias services: adapter.services
     property alias paths: adapter.paths
 
+    signal loaded()
+
     // Public save function - call this to persist config changes
     function save(): void {
         saveTimer.restart();
@@ -308,6 +310,7 @@ Singleton {
             vimKeybinds: launcher.vimKeybinds,
             favouriteApps: launcher.favouriteApps,
             hiddenApps: launcher.hiddenApps,
+            floatingApps: launcher.floatingApps,
             useFuzzy: {
                 apps: launcher.useFuzzy.apps,
                 actions: launcher.useFuzzy.actions,
@@ -478,6 +481,7 @@ Singleton {
             }
         }
         onLoaded: {
+            root.loaded();
             try {
                 JSON.parse(text());
                 const elapsed = timer.elapsedMs();

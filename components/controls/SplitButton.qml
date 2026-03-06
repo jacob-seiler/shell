@@ -19,6 +19,7 @@ Row {
     property bool menuOnTop
     property string fallbackIcon
     property string fallbackText
+    property bool animated: true
 
     property alias menuItems: menu.items
     property alias active: menu.active
@@ -85,6 +86,7 @@ Row {
                 clip: true
 
                 Behavior on Layout.preferredWidth {
+                    enabled: root.animated
                     Anim {
                         easing.bezierCurve: Appearance.anim.curves.emphasized
                     }

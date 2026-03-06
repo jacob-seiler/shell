@@ -35,21 +35,8 @@ Item {
 
         rowSpacing: 0
         columnSpacing: 0
-        rows: root.floating ? 2 : 1
+        rows: 1
         columns: 2
-
-        Loader {
-            Layout.fillWidth: true
-            Layout.columnSpan: 2
-
-            active: root.floating
-            visible: active
-
-            sourceComponent: WindowTitle {
-                screen: root.screen
-                session: root.session
-            }
-        }
 
         StyledRect {
             Layout.fillHeight: true

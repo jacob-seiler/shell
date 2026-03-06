@@ -19,6 +19,9 @@ StyledRect {
     property alias active: splitButton.active
     property alias expanded: splitButton.expanded
     property alias type: splitButton.type
+    property alias fallbackText: splitButton.fallbackText
+    property alias fallbackIcon: splitButton.fallbackIcon
+    property alias animated: splitButton.animated
 
     signal selected(item: MenuItem)
 
