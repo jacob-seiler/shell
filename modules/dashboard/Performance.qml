@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Shapes
 import Quickshell.Services.UPower
 import qs.components
 import qs.components.misc
@@ -270,7 +271,7 @@ Item {
 
         Behavior on animatedPercentage {
             Anim {
-                duration: Appearance.anim.durations.large
+                duration: 150
             }
         }
     }
@@ -322,7 +323,7 @@ Item {
 
         Behavior on animatedValue {
             Anim {
-                duration: Appearance.anim.durations.large
+                duration: 150
             }
         }
     }
@@ -442,13 +443,13 @@ Item {
 
         Behavior on animatedUsage {
             Anim {
-                duration: Appearance.anim.durations.large
+                duration: 150
             }
         }
 
         Behavior on animatedTemp {
             Anim {
-                duration: Appearance.anim.durations.large
+                duration: 150
             }
         }
     }
@@ -461,8 +462,6 @@ Item {
         property real percentage: 0
         property string subtitle
         property color accentColor: Colours.palette.m3primary
-        readonly property real arcStartAngle: 0.75 * Math.PI
-        readonly property real arcSweep: 1.5 * Math.PI
         property real animatedPercentage: 0
 
         color: Colours.tPalette.m3surfaceContainer
@@ -486,50 +485,50 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
-                Canvas {
-                    id: gaugeCanvas
+                Shape {
+                    id: gaugeShape
 
                     anchors.centerIn: parent
-                    width: Math.min(parent.width, parent.height)
-                    height: width
-                    onPaint: {
-                        const ctx = getContext("2d");
-                        ctx.reset();
-                        const cx = width / 2;
-                        const cy = height / 2;
-                        const radius = (Math.min(width, height) - 12) / 2;
-                        const lineWidth = 10;
-                        ctx.beginPath();
-                        ctx.arc(cx, cy, radius, gaugeCard.arcStartAngle, gaugeCard.arcStartAngle + gaugeCard.arcSweep);
-                        ctx.lineWidth = lineWidth;
-                        ctx.lineCap = "round";
-                        ctx.strokeStyle = Colours.layer(Colours.palette.m3surfaceContainerHigh, 2);
-                        ctx.stroke();
-                        if (gaugeCard.animatedPercentage > 0) {
-                            ctx.beginPath();
-                            ctx.arc(cx, cy, radius, gaugeCard.arcStartAngle, gaugeCard.arcStartAngle + gaugeCard.arcSweep * gaugeCard.animatedPercentage);
-                            ctx.lineWidth = lineWidth;
-                            ctx.lineCap = "round";
-                            ctx.strokeStyle = gaugeCard.accentColor;
-                            ctx.stroke();
+
+                    readonly property real sz: Math.min(parent.width, parent.height)
+                    readonly property real radius: (sz - 12) / 2
+
+                    width: sz
+                    height: sz
+
+                    preferredRendererType: Shape.CurveRenderer
+                    asynchronous: true
+
+                    ShapePath {
+                        fillColor: "transparent"
+                        strokeColor: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+                        strokeWidth: 10
+                        capStyle: ShapePath.RoundCap
+
+                        PathAngleArc {
+                            startAngle: 135
+                            sweepAngle: 270
+                            radiusX: gaugeShape.radius
+                            radiusY: gaugeShape.radius
+                            centerX: gaugeShape.sz / 2
+                            centerY: gaugeShape.sz / 2
                         }
                     }
-                    Component.onCompleted: requestPaint()
 
-                    Connections {
-                        function onAnimatedPercentageChanged() {
-                            gaugeCanvas.requestPaint();
+                    ShapePath {
+                        fillColor: "transparent"
+                        strokeColor: gaugeCard.accentColor
+                        strokeWidth: 10
+                        capStyle: ShapePath.RoundCap
+
+                        PathAngleArc {
+                            startAngle: 135
+                            sweepAngle: 270 * gaugeCard.animatedPercentage
+                            radiusX: gaugeShape.radius
+                            radiusY: gaugeShape.radius
+                            centerX: gaugeShape.sz / 2
+                            centerY: gaugeShape.sz / 2
                         }
-
-                        target: gaugeCard
-                    }
-
-                    Connections {
-                        function onPaletteChanged() {
-                            gaugeCanvas.requestPaint();
-                        }
-
-                        target: Colours
                     }
                 }
 
@@ -552,7 +551,7 @@ Item {
 
         Behavior on animatedPercentage {
             Anim {
-                duration: Appearance.anim.durations.large
+                duration: 150
             }
         }
     }
@@ -563,8 +562,6 @@ Item {
         property int currentDiskIndex: 0
         readonly property var currentDisk: SystemUsage.disks.length > 0 ? SystemUsage.disks[currentDiskIndex] : null
         property int diskCount: 0
-        readonly property real arcStartAngle: 0.75 * Math.PI
-        readonly property real arcSweep: 1.5 * Math.PI
         property real animatedPercentage: 0
         property color accentColor: Colours.palette.m3secondary
 
@@ -642,50 +639,50 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
-                Canvas {
-                    id: storageGaugeCanvas
+                Shape {
+                    id: storageGaugeShape
 
                     anchors.centerIn: parent
-                    width: Math.min(parent.width, parent.height)
-                    height: width
-                    onPaint: {
-                        const ctx = getContext("2d");
-                        ctx.reset();
-                        const cx = width / 2;
-                        const cy = height / 2;
-                        const radius = (Math.min(width, height) - 12) / 2;
-                        const lineWidth = 10;
-                        ctx.beginPath();
-                        ctx.arc(cx, cy, radius, storageGaugeCard.arcStartAngle, storageGaugeCard.arcStartAngle + storageGaugeCard.arcSweep);
-                        ctx.lineWidth = lineWidth;
-                        ctx.lineCap = "round";
-                        ctx.strokeStyle = Colours.layer(Colours.palette.m3surfaceContainerHigh, 2);
-                        ctx.stroke();
-                        if (storageGaugeCard.animatedPercentage > 0) {
-                            ctx.beginPath();
-                            ctx.arc(cx, cy, radius, storageGaugeCard.arcStartAngle, storageGaugeCard.arcStartAngle + storageGaugeCard.arcSweep * storageGaugeCard.animatedPercentage);
-                            ctx.lineWidth = lineWidth;
-                            ctx.lineCap = "round";
-                            ctx.strokeStyle = storageGaugeCard.accentColor;
-                            ctx.stroke();
+
+                    readonly property real sz: Math.min(parent.width, parent.height)
+                    readonly property real radius: (sz - 12) / 2
+
+                    width: sz
+                    height: sz
+
+                    preferredRendererType: Shape.CurveRenderer
+                    asynchronous: true
+
+                    ShapePath {
+                        fillColor: "transparent"
+                        strokeColor: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+                        strokeWidth: 10
+                        capStyle: ShapePath.RoundCap
+
+                        PathAngleArc {
+                            startAngle: 135
+                            sweepAngle: 270
+                            radiusX: storageGaugeShape.radius
+                            radiusY: storageGaugeShape.radius
+                            centerX: storageGaugeShape.sz / 2
+                            centerY: storageGaugeShape.sz / 2
                         }
                     }
-                    Component.onCompleted: requestPaint()
 
-                    Connections {
-                        function onAnimatedPercentageChanged() {
-                            storageGaugeCanvas.requestPaint();
+                    ShapePath {
+                        fillColor: "transparent"
+                        strokeColor: storageGaugeCard.accentColor
+                        strokeWidth: 10
+                        capStyle: ShapePath.RoundCap
+
+                        PathAngleArc {
+                            startAngle: 135
+                            sweepAngle: 270 * storageGaugeCard.animatedPercentage
+                            radiusX: storageGaugeShape.radius
+                            radiusY: storageGaugeShape.radius
+                            centerX: storageGaugeShape.sz / 2
+                            centerY: storageGaugeShape.sz / 2
                         }
-
-                        target: storageGaugeCard
-                    }
-
-                    Connections {
-                        function onPaletteChanged() {
-                            storageGaugeCanvas.requestPaint();
-                        }
-
-                        target: Colours
                     }
                 }
 
@@ -715,7 +712,7 @@ Item {
 
         Behavior on animatedPercentage {
             Anim {
-                duration: Appearance.anim.durations.large
+                duration: 150
             }
         }
     }
@@ -751,36 +748,41 @@ Item {
 
                 Canvas {
                     id: sparklineCanvas
+                    anchors.fill: parent
 
                     property var downHistory: NetworkUsage.downloadHistory
                     property var upHistory: NetworkUsage.uploadHistory
                     property real targetMax: 1024
-                    property real smoothMax: targetMax
-                    property real slideProgress: 0
-                    property int _tickCount: 0
-                    property int _lastTickCount: -1
+                    property real scrollOffset: 0
+                    property real stepX: width > 0 ? width / (NetworkUsage.historyLength - 1) : 0
 
-                    function checkAndAnimate(): void {
-                        const currentLength = (downHistory || []).length;
-                        if (currentLength > 0 && _tickCount !== _lastTickCount) {
-                            _lastTickCount = _tickCount;
-                            updateMax();
-                        }
-                    }
+                    onScrollOffsetChanged: requestPaint()
 
                     function updateMax(): void {
                         const downHist = downHistory || [];
                         const upHist = upHistory || [];
                         const allValues = downHist.concat(upHist);
                         targetMax = Math.max(...allValues, 1024);
-                        requestPaint();
                     }
 
-                    anchors.fill: parent
-                    onDownHistoryChanged: checkAndAnimate()
-                    onUpHistoryChanged: checkAndAnimate()
-                    onSmoothMaxChanged: requestPaint()
-                    onSlideProgressChanged: requestPaint()
+                    NumberAnimation {
+                        id: scrollAnimation
+                        target: sparklineCanvas
+                        property: "scrollOffset"
+                        to: 0
+                        duration: 1000
+                        easing.type: Easing.Linear
+                    }
+
+                    onDownHistoryChanged: {
+                        updateMax();
+                        scrollAnimation.stop();
+                        scrollOffset = stepX;
+                        scrollAnimation.start();
+                    }
+                    onUpHistoryChanged: {
+                        updateMax();
+                    }
 
                     onPaint: {
                         const ctx = getContext("2d");
@@ -792,19 +794,19 @@ Item {
                         if (downHist.length < 2 && upHist.length < 2)
                             return;
 
-                        const maxVal = smoothMax;
+                        const maxVal = targetMax;
+                        const sX = stepX;
 
                         const drawLine = (history, color, fillAlpha) => {
                             if (history.length < 2)
                                 return;
 
                             const len = history.length;
-                            const stepX = w / (NetworkUsage.historyLength - 1);
-                            const startX = w - (len - 1) * stepX - stepX * slideProgress + stepX;
+                            const startX = w - (len - 1) * sX + scrollOffset;
                             ctx.beginPath();
                             ctx.moveTo(startX, h - (history[0] / maxVal) * h);
                             for (let i = 1; i < len; i++) {
-                                const x = startX + i * stepX;
+                                const x = startX + i * sX;
                                 const y = h - (history[i] / maxVal) * h;
                                 ctx.lineTo(x, y);
                             }
@@ -813,7 +815,7 @@ Item {
                             ctx.lineCap = "round";
                             ctx.lineJoin = "round";
                             ctx.stroke();
-                            ctx.lineTo(startX + (len - 1) * stepX, h);
+                            ctx.lineTo(startX + (len - 1) * sX, h);
                             ctx.lineTo(startX, h);
                             ctx.closePath();
                             ctx.fillStyle = Qt.rgba(Qt.color(color).r, Qt.color(color).g, Qt.color(color).b, fillAlpha);
@@ -824,7 +826,10 @@ Item {
                         drawLine(downHist, Colours.palette.m3tertiary.toString(), 0.2);
                     }
 
-                    Component.onCompleted: updateMax()
+                    Component.onCompleted: {
+                        updateMax();
+                        requestPaint();
+                    }
 
                     Connections {
                         function onPaletteChanged() {
@@ -832,27 +837,6 @@ Item {
                         }
 
                         target: Colours
-                    }
-
-                    Timer {
-                        interval: Config.dashboard.resourceUpdateInterval
-                        running: true
-                        repeat: true
-                        onTriggered: sparklineCanvas._tickCount++
-                    }
-
-                    NumberAnimation on slideProgress {
-                        from: 0
-                        to: 1
-                        duration: Config.dashboard.resourceUpdateInterval
-                        loops: Animation.Infinite
-                        running: true
-                    }
-
-                    Behavior on smoothMax {
-                        Anim {
-                            duration: Appearance.anim.durations.large
-                        }
                     }
                 }
 

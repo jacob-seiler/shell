@@ -129,7 +129,7 @@ Item {
                 spacing: 0
 
                 StyledText {
-                    text: Time.format("MMMM").toUpperCase()
+                    text: Time.monthStr.toUpperCase()
                     font.pointSize: Appearance.font.size.large * root.scale
                     font.letterSpacing: 4
                     font.weight: Font.Bold
@@ -137,7 +137,7 @@ Item {
                 }
 
                 StyledText {
-                    text: Time.format("dd")
+                    text: Time.dayStr
                     font.pointSize: Appearance.font.size.extraLarge * root.scale
                     font.letterSpacing: 2
                     font.weight: Font.Medium
@@ -145,7 +145,7 @@ Item {
                 }
 
                 StyledText {
-                    text: Time.format("dddd")
+                    text: Time.dayOfWeekStr
                     font.pointSize: Appearance.font.size.larger * root.scale
                     font.letterSpacing: 2
                     color: root.safeSecondary

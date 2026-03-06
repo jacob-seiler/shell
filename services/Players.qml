@@ -33,6 +33,14 @@ Singleton {
         }
     }
 
+    Timer {
+        running: root.active?.isPlaying ?? false
+        interval: Config.dashboard.mediaUpdateInterval
+        triggeredOnStart: true
+        repeat: true
+        onTriggered: root.active?.positionChanged()
+    }
+
     PersistentProperties {
         id: props
 

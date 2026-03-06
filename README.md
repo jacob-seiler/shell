@@ -16,6 +16,15 @@ https://github.com/user-attachments/assets/0840f496-575c-4ca6-83a8-87bb01a85c5f
 
 This is a personal fork of [caelestia-dots/shell](https://github.com/caelestia-dots/shell) with the following modifications:
 
+### Rendering and CPU efficiency improvements
+
+Several unnecessary update cycles and over-broad redraws have been eliminated across the shell:
+
+- The visualiser's full-screen GPU blur layer is now only allocated when blur is actually enabled
+- Polling timers throughout the dashboard and control center are now properly gated — stopping when their UI isn't visible, when data is already available, or when media isn't playing
+- The MPRIS position polling timer has been consolidated into the `Players` service so it runs once regardless of how many UI components are open
+- Clock text bindings now use cached properties that only propagate changes when the displayed value actually differs, rather than re-evaluating every second
+
 ### Smooth keyboard brightness transitions
 
 When adjusting screen brightness via keyboard shortcuts, the actual hardware brightness now transitions smoothly to the target value instead of jumping to it instantly. This works by animating an intermediate property that drives incremental `brightnessctl` calls as it interpolates — the same animation that the OSD slider already uses visually, now applied to the hardware value itself. The result is that the physical display brightness eases in and out rather than cutting abruptly.

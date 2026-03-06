@@ -44,14 +44,6 @@ Item {
         }
     }
 
-    Timer {
-        running: Players.active?.isPlaying ?? false
-        interval: Config.dashboard.mediaUpdateInterval
-        triggeredOnStart: true
-        repeat: true
-        onTriggered: Players.active?.positionChanged()
-    }
-
     ServiceRef {
         service: Audio.cava
     }
