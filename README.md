@@ -18,12 +18,10 @@ This is a personal fork of [caelestia-dots/shell](https://github.com/caelestia-d
 
 ### Rendering and CPU efficiency improvements
 
-Several unnecessary update cycles and over-broad redraws have been eliminated across the shell:
-
-- The visualiser's full-screen GPU blur layer is now only allocated when blur is actually enabled
-- Polling timers throughout the dashboard and control center are now properly gated — stopping when their UI isn't visible, when data is already available, or when media isn't playing
-- The MPRIS position polling timer has been consolidated into the `Players` service so it runs once regardless of how many UI components are open
-- Clock text bindings now use cached properties that only propagate changes when the displayed value actually differs, rather than re-evaluating every second
+- The visualiser's blur layer is only allocated when blur is actually enabled
+- Polling timers in the dashboard and control centre stop when their UI isn't visible
+- Media position polling runs once regardless of how many UI components are open
+- Clock updates only fire when the displayed value actually changes
 
 ### Control centre overhaul
 
@@ -41,11 +39,12 @@ Scroll containers throughout the shell now support momentum (kinetic) scrolling 
 
 The shell now tracks whether each app window was launched in tiled or floating mode, allowing per-app behaviour to be handled correctly when windows are opened.
 
-### Smooth keyboard brightness transitions
+### Brightness improvements
 
-When adjusting screen brightness via keyboard shortcuts, the actual hardware brightness now transitions smoothly to the target value instead of jumping to it instantly. This works by animating an intermediate property that drives incremental `brightnessctl` calls as it interpolates — the same animation that the OSD slider already uses visually, now applied to the hardware value itself. The result is that the physical display brightness eases in and out rather than cutting abruptly.
-
-> Note: This only applies to internal/backlight displays (`brightnessctl`). DDC/CI external monitors and Apple Studio Displays are unaffected, as they use different brightness control mechanisms that don't support this approach.
+- **Auto-brightness** reads the ambient light sensor every 5 seconds and gradually eases the screen to an appropriate level — changes are slow and smooth rather than instant
+- **Manual adjustments don't disable auto-brightness** — scrolling or using keyboard shortcuts shifts brightness relative to the current light level, so auto-brightness keeps working and adapts as the room gets brighter or darker
+- **Waking from sleep** clears any manual offset and recalibrates from scratch
+- All brightness changes on internal displays animate smoothly instead of jumping
 
 ## Components
 
