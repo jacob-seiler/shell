@@ -11,6 +11,8 @@ JsonObject {
     property real audioIncrement: 0.1
     property real brightnessIncrement: 0.1
     property bool autoBrightness: false
+    property bool nightColor: false
+    property int nightColorTemp: 4500
     property real maxVolume: 1.0
     property bool smartScheme: true
     property string defaultPlayer: "Spotify"

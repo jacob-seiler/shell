@@ -50,6 +50,7 @@ ColumnLayout {
     }
 
     signal valueModified(real newValue)
+    readonly property alias sliderPressed: slider.pressed
 
     property bool _initialized: false
 

@@ -17,6 +17,8 @@ Item {
 
     readonly property var monitor: Brightness.getMonitor("active") ?? (Brightness.monitors.length > 0 ? Brightness.monitors[0] : null)
 
+    property int nightColorTemp: NightColor.temperature
+
     property bool idleLockBeforeSleep: Config.general.idle.lockBeforeSleep ?? true
     property bool idleInhibitWhenAudio: Config.general.idle.inhibitWhenAudio ?? true
     property bool idleDimBeforeScreenOff: Config.general.idle.dimBeforeScreenOff ?? true
@@ -68,6 +70,73 @@ Item {
             SettingsHeader {
                 icon: "brightness_high"
                 title: qsTr("Display")
+            }
+
+            SectionHeader {
+                title: qsTr("Night Color")
+                description: qsTr("Reduce blue light for easier viewing at night")
+            }
+
+            SectionContainer {
+                SwitchRow {
+                    label: qsTr("Enable night color")
+                    checked: NightColor.enabled
+                    enabled: NightColor.available
+                    onToggled: checked => NightColor.setEnabled(checked)
+                }
+
+                SliderInput {
+                    id: tempSliderInput
+
+                    visible: NightColor.available
+                    Layout.fillWidth: true
+
+                    label: qsTr("Color temperature")
+                    value: root.nightColorTemp
+                    from: 6500
+                    to: 2700
+                    stepSize: 100
+                    suffix: qsTr(" K")
+                    validator: IntValidator {
+                        bottom: 2700
+                        top: 6500
+                    }
+                    formatValueFunction: val => Math.round(val).toString()
+                    parseValueFunction: text => parseInt(text)
+
+                    onValueModified: newValue => {
+                        root.nightColorTemp = newValue;
+                        NightColor.startPreview(newValue);
+                        if (!sliderPressed) NightColor.setTemperature(newValue);
+                    }
+                    onSliderPressedChanged: {
+                        if (!sliderPressed) NightColor.setTemperature(root.nightColorTemp);
+                    }
+                }
+
+                RowLayout {
+                    visible: !NightColor.available
+                    spacing: Appearance.spacing.small
+
+                    MaterialIcon {
+                        text: "warning"
+                        color: Colours.palette.m3error
+                        font.pointSize: Appearance.font.size.normal
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: qsTr("hyprsunset is not installed")
+                        color: Colours.palette.m3error
+                        font.pointSize: Appearance.font.size.small
+                    }
+
+                    IconButton {
+                        type: IconButton.Text
+                        icon: "refresh"
+                        onClicked: NightColor.recheck()
+                    }
+                }
             }
 
             SectionHeader {
