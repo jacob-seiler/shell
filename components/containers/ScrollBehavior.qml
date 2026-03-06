@@ -33,7 +33,7 @@ QtObject {
             // Only compound carry into a new flick if the tracker shows clear scroll
             // intent (velocity above threshold). A catch gesture may still move slightly,
             // producing a low-velocity tracker reading — in that case discard the carry.
-            const trackerVy = _tracker.velocity();
+            const trackerVy = _tracker.recentVelocity();
             const vy = Math.abs(trackerVy) > carryThreshold ? trackerVy + _carriedVy : trackerVy;
             _carriedVy = 0;
             const minY = target.originY;
@@ -74,6 +74,15 @@ QtObject {
                 return 0;
             const dt = (yTimes[yTimes.length - 1] - yTimes[0]) / 1000;
             return dt === 0 ? 0 : yDeltas.reduce((s, d) => s + d, 0) / dt;
+        }
+
+        function recentVelocity() {
+            if (yTimes.length < 2)
+                return 0;
+            const now = Date.now();
+            if (now - yTimes[yTimes.length - 1] > root.trackingWindow)
+                return 0;
+            return velocity();
         }
 
         function clear() {
