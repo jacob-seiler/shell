@@ -25,6 +25,12 @@ QtObject {
             readonly property string component: "audio/AudioPane.qml"
         },
         QtObject {
+            readonly property string id: "display"
+            readonly property string label: "display"
+            readonly property string icon: "brightness_high"
+            readonly property string component: "display/DisplayPane.qml"
+        },
+        QtObject {
             readonly property string id: "battery"
             readonly property string label: "battery"
             readonly property string icon: "battery_full"

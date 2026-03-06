@@ -86,13 +86,10 @@ Item {
                 implicitHeight: Config.osd.sizes.sliderHeight
 
                 function onWheel(event: WheelEvent) {
-                    const monitor = root.monitor;
-                    if (!monitor)
-                        return;
                     if (event.angleDelta.y > 0)
-                        monitor.setBrightness(monitor.brightness + Config.services.brightnessIncrement);
+                        Brightness.increaseBrightness();
                     else if (event.angleDelta.y < 0)
-                        monitor.setBrightness(monitor.brightness - Config.services.brightnessIncrement);
+                        Brightness.decreaseBrightness();
                 }
 
                 FilledSlider {
@@ -102,6 +99,24 @@ Item {
                     value: root.brightness
                     onMoved: root.monitor?.setBrightness(value)
                 }
+            }
+        }
+
+        // Auto brightness toggle
+        Item {
+            visible: Config.osd.enableBrightness
+            implicitWidth: Config.osd.sizes.sliderWidth
+            implicitHeight: autoBrightnessBtn.implicitHeight
+
+            IconButton {
+                id: autoBrightnessBtn
+                anchors.horizontalCenter: parent.horizontalCenter
+                toggle: true
+                checked: Brightness.autoBrightness
+                type: IconButton.Tonal
+                icon: "brightness_auto"
+
+                onClicked: Brightness.setAutoBrightness(!Brightness.autoBrightness)
             }
         }
     }

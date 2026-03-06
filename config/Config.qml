@@ -450,6 +450,7 @@ Singleton {
             visualiserBars: services.visualiserBars,
             audioIncrement: services.audioIncrement,
             brightnessIncrement: services.brightnessIncrement,
+            autoBrightness: services.autoBrightness,
             maxVolume: services.maxVolume,
             smartScheme: services.smartScheme,
             defaultPlayer: services.defaultPlayer,
