@@ -80,6 +80,10 @@ Singleton {
     }
 
     function increaseBrightness(): void {
+        if (monitors.some(m => m.preDimBrightness >= 0)) {
+            undim();
+            return;
+        }
         const monitor = getMonitor("active");
         if (!monitor)
             return;
@@ -91,6 +95,10 @@ Singleton {
     }
 
     function decreaseBrightness(): void {
+        if (monitors.some(m => m.preDimBrightness >= 0)) {
+            undim();
+            return;
+        }
         const monitor = getMonitor("active");
         if (!monitor)
             return;
