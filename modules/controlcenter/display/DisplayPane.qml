@@ -21,11 +21,13 @@ Item {
     property string nightColorSchedule: "off"
     property string nightColorFrom: "20:00"
     property string nightColorTo: "07:00"
+    property int nightColorRampDuration: 60
 
     function _readNightColorConfig(): void {
         nightColorSchedule = Config.services.nightColorSchedule ?? "off";
         nightColorFrom = Config.services.nightColorFrom ?? "20:00";
         nightColorTo = Config.services.nightColorTo ?? "07:00";
+        nightColorRampDuration = Config.services.nightColorRampDuration ?? 60;
     }
 
     Component.onCompleted: _readNightColorConfig()
@@ -241,6 +243,27 @@ Item {
                     }
 
                     Item { Layout.fillWidth: true }
+                }
+
+                SliderInput {
+                    visible: NightColor.available && root.nightColorSchedule !== "off"
+                    Layout.fillWidth: true
+
+                    label: qsTr("Transition duration")
+                    value: root.nightColorRampDuration
+                    from: 0
+                    to: 120
+                    stepSize: 5
+                    suffix: qsTr(" min")
+                    validator: IntValidator { bottom: 0; top: 120 }
+                    formatValueFunction: val => Math.round(val).toString()
+                    parseValueFunction: text => parseInt(text)
+
+                    onValueModified: newValue => {
+                        root.nightColorRampDuration = newValue;
+                        Config.services.nightColorRampDuration = newValue;
+                        Config.save();
+                    }
                 }
 
                 RowLayout {

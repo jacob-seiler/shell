@@ -23,11 +23,20 @@ This is a personal fork of [caelestia-dots/shell](https://github.com/caelestia-d
 - Media position polling runs once regardless of how many UI components are open
 - Clock updates only fire when the displayed value actually changes
 
+### Night color
+
+Reduces blue light via [`hyprsunset`](https://github.com/hyprwm/hyprsunset) with full control from the Display pane in the control centre:
+
+- Toggle on/off and adjust color temperature (2700 K – 6500 K) with a live preview
+- **Schedule modes**: off, sunset-to-sunrise (auto-detected via weather), or a custom time range
+- **Gradual transitions** — configurable ramp duration (0 – 120 min) smoothly eases the color temperature in at sunset and back out at sunrise, rather than switching instantly
+
 ### Control centre overhaul
 
 The control centre has been redesigned with a navigation rail for switching between panes, including:
 
-- A new **battery pane** showing charge level, status, and estimated time remaining
+- A new **display pane** for brightness, night color, and idle/sleep timer settings — all configurable from the UI without editing config files
+- A new **battery pane** showing charge level, status, estimated time remaining, and a **power profile selector** (Power Saver / Balanced / Performance)
 - A **launcher pane** for quick access to apps from within the control centre
 - A **wallpaper grid** for browsing and switching wallpapers in-place
 

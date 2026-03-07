@@ -16,6 +16,7 @@ JsonObject {
     property string nightColorSchedule: "off"
     property string nightColorFrom: "20:00"
     property string nightColorTo: "07:00"
+    property int nightColorRampDuration: 60
     property real maxVolume: 1.0
     property bool smartScheme: true
     property string defaultPlayer: "Spotify"
