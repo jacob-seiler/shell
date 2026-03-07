@@ -18,6 +18,22 @@ Item {
     readonly property var monitor: Brightness.getMonitor("active") ?? (Brightness.monitors.length > 0 ? Brightness.monitors[0] : null)
 
     property int nightColorTemp: NightColor.temperature
+    property string nightColorSchedule: "off"
+    property string nightColorFrom: "20:00"
+    property string nightColorTo: "07:00"
+
+    function _readNightColorConfig(): void {
+        nightColorSchedule = Config.services.nightColorSchedule ?? "off";
+        nightColorFrom = Config.services.nightColorFrom ?? "20:00";
+        nightColorTo = Config.services.nightColorTo ?? "07:00";
+    }
+
+    Component.onCompleted: _readNightColorConfig()
+
+    Connections {
+        target: Config
+        function onLoaded(): void { root._readNightColorConfig(); }
+    }
 
     property bool idleLockBeforeSleep: Config.general.idle.lockBeforeSleep ?? true
     property bool idleInhibitWhenAudio: Config.general.idle.inhibitWhenAudio ?? true
@@ -59,6 +75,15 @@ Item {
             flickable: flickable
         }
 
+        MouseArea {
+            anchors.fill: parent
+            z: -1
+            onPressed: mouse => {
+                flickable.forceActiveFocus();
+                mouse.accepted = false;
+            }
+        }
+
         ColumnLayout {
             id: contentLayout
 
@@ -79,7 +104,7 @@ Item {
 
             SectionContainer {
                 SwitchRow {
-                    label: qsTr("Enable night color")
+                    label: qsTr("Active")
                     checked: NightColor.enabled
                     enabled: NightColor.available
                     onToggled: checked => NightColor.setEnabled(checked)
@@ -112,6 +137,89 @@ Item {
                     onSliderPressedChanged: {
                         if (!sliderPressed) NightColor.setTemperature(root.nightColorTemp);
                     }
+                }
+
+                RowLayout {
+                    visible: NightColor.available
+                    spacing: Appearance.spacing.normal
+
+                    StyledText {
+                        text: qsTr("Schedule")
+                        font.pointSize: Appearance.font.size.normal
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    TextButton {
+                        text: qsTr("Off")
+                        toggle: false
+                        checked: root.nightColorSchedule === "off"
+                        type: TextButton.Tonal
+                        onClicked: {
+                            root.nightColorSchedule = "off";
+                            Config.services.nightColorSchedule = "off";
+                            Config.save();
+                        }
+                    }
+
+                    TextButton {
+                        text: qsTr("Sunset to Sunrise")
+                        toggle: false
+                        checked: root.nightColorSchedule === "sunset"
+                        type: TextButton.Tonal
+                        onClicked: {
+                            root.nightColorSchedule = "sunset";
+                            Config.services.nightColorSchedule = "sunset";
+                            Config.save();
+                        }
+                    }
+
+                    TextButton {
+                        text: qsTr("Custom")
+                        toggle: false
+                        checked: root.nightColorSchedule === "custom"
+                        type: TextButton.Tonal
+                        onClicked: {
+                            root.nightColorSchedule = "custom";
+                            Config.services.nightColorSchedule = "custom";
+                            Config.save();
+                        }
+                    }
+                }
+
+                RowLayout {
+                    visible: NightColor.available && root.nightColorSchedule === "custom"
+                    spacing: Appearance.spacing.normal
+
+                    StyledText {
+                        text: qsTr("From")
+                        font.pointSize: Appearance.font.size.normal
+                    }
+
+                    TimePicker {
+                        time: root.nightColorFrom
+                        onTimeModified: t => {
+                            root.nightColorFrom = t;
+                            Config.services.nightColorFrom = t;
+                            Config.save();
+                        }
+                    }
+
+                    StyledText {
+                        text: qsTr("To")
+                        font.pointSize: Appearance.font.size.normal
+                    }
+
+                    TimePicker {
+                        time: root.nightColorTo
+                        onTimeModified: t => {
+                            root.nightColorTo = t;
+                            Config.services.nightColorTo = t;
+                            Config.save();
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
                 }
 
                 RowLayout {

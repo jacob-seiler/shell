@@ -13,6 +13,9 @@ JsonObject {
     property bool autoBrightness: false
     property bool nightColor: false
     property int nightColorTemp: 4500
+    property string nightColorSchedule: "off"
+    property string nightColorFrom: "20:00"
+    property string nightColorTo: "07:00"
     property real maxVolume: 1.0
     property bool smartScheme: true
     property string defaultPlayer: "Spotify"
