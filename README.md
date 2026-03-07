@@ -30,6 +30,11 @@ Reduces blue light via [`hyprsunset`](https://github.com/hyprwm/hyprsunset) with
 - Toggle on/off and adjust color temperature (2700 K – 6500 K) with a live preview
 - **Schedule modes**: off, sunset-to-sunrise (auto-detected via weather), or a custom time range
 - **Gradual transitions** — configurable ramp duration (0 – 120 min) smoothly eases the color temperature in at sunset and back out at sunrise, rather than switching instantly
+- **Quick action card** — when night color is active, a card appears in the utilities area showing when it will turn off and a toggle to disable it without opening the control centre
+
+### Calendar popout
+
+Clicking the clock in the bar opens a calendar popout, reusing the same calendar component from the dashboard. Enable it via `bar.popouts.clock` and adjust its width via `bar.sizes.calendarWidth`.
 
 ### Control centre overhaul
 
