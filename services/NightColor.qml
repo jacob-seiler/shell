@@ -1,6 +1,7 @@
 pragma Singleton
 
 import qs.config
+import qs.services
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -16,7 +17,17 @@ Singleton {
     property bool _wasInRange: false
     property bool _immediateApplyPending: false
 
+    function _isSunsetInRange(): bool {
+        if (!Weather.cc) return false;
+        const now = new Date();
+        const sunrise = new Date(Weather.cc.sunrise);
+        const sunset  = new Date(Weather.cc.sunset);
+        return now >= sunset || now < sunrise;
+    }
+
     function _isInRange(): bool {
+        if (Config.services.nightColorSchedule === "sunset")
+            return _isSunsetInRange();
         const now = new Date();
         const cur = now.getHours() * 60 + now.getMinutes();
         const parts = s => s.split(":").map(Number);
@@ -29,7 +40,23 @@ Singleton {
                          : (cur >= from || cur < to);
     }
 
+    function _msUntilNextSunsetBoundary(): int {
+        if (!Weather.cc) return 3600000;
+        const now = new Date();
+        let sunrise = new Date(Weather.cc.sunrise);
+        let sunset  = new Date(Weather.cc.sunset);
+        if (_isSunsetInRange()) {
+            if (sunrise <= now) sunrise = new Date(sunrise.getTime() + 86400000);
+            return Math.max(1000, sunrise.getTime() - now.getTime());
+        } else {
+            if (sunset <= now) sunset = new Date(sunset.getTime() + 86400000);
+            return Math.max(1000, sunset.getTime() - now.getTime());
+        }
+    }
+
     function _msUntilNext(): int {
+        if (Config.services.nightColorSchedule === "sunset")
+            return _msUntilNextSunsetBoundary();
         const now = new Date();
         const curMs = (now.getHours() * 60 + now.getMinutes()) * 60000 + now.getSeconds() * 1000 + now.getMilliseconds();
         const parts = s => s.split(":").map(Number);
@@ -66,7 +93,8 @@ Singleton {
     }
 
     function _scheduleNext(): void {
-        if (Config.services.nightColorSchedule !== "custom") return;
+        const schedule = Config.services.nightColorSchedule;
+        if (schedule !== "custom" && schedule !== "sunset") return;
         scheduleTimer.interval = _msUntilNext();
         scheduleTimer.restart();
     }
@@ -149,7 +177,8 @@ Singleton {
     Connections {
         target: Config.services
         function onNightColorScheduleChanged() {
-            if (Config.services.nightColorSchedule === "custom")
+            const schedule = Config.services.nightColorSchedule;
+            if (schedule === "custom" || schedule === "sunset")
                 root._resetAndCheck();
             else
                 scheduleTimer.stop();
@@ -164,8 +193,17 @@ Singleton {
         }
     }
 
+    Connections {
+        target: Weather
+        function onCcChanged(): void {
+            if (Config.services.nightColorSchedule === "sunset")
+                root._resetAndCheck();
+        }
+    }
+
     Component.onCompleted: {
-        if (Config.services.nightColorSchedule === "custom")
+        const schedule = Config.services.nightColorSchedule;
+        if (schedule === "custom" || schedule === "sunset")
             _resetAndCheck();
     }
 

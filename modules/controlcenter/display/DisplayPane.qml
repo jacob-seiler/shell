@@ -188,6 +188,27 @@ Item {
                 }
 
                 RowLayout {
+                    visible: NightColor.available && root.nightColorSchedule === "sunset"
+                    spacing: Appearance.spacing.normal
+
+                    MaterialIcon {
+                        text: "wb_twilight"
+                        color: Colours.palette.m3outline
+                        font.pointSize: Appearance.font.size.normal
+                    }
+
+                    StyledText {
+                        text: Weather.cc
+                            ? qsTr("Sunset %1 · Sunrise %2").arg(Weather.sunset).arg(Weather.sunrise)
+                            : qsTr("Determining times…")
+                        color: Colours.palette.m3outline
+                        font.pointSize: Appearance.font.size.small
+                    }
+
+                    Item { Layout.fillWidth: true }
+                }
+
+                RowLayout {
                     visible: NightColor.available && root.nightColorSchedule === "custom"
                     spacing: Appearance.spacing.normal
 
