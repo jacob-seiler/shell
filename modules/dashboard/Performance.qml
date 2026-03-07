@@ -770,7 +770,7 @@ Item {
                         target: sparklineCanvas
                         property: "scrollOffset"
                         to: 0
-                        duration: 1000
+                        duration: 300
                         easing.type: Easing.Linear
                     }
 

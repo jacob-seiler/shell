@@ -43,6 +43,7 @@ Singleton {
     property real lastCpuTotal
 
     property int refCount
+    property int _tick: 0
 
     function cleanCpuName(name: string): string {
         return name.replace(/\(R\)/gi, "").replace(/\(TM\)/gi, "").replace(/CPU/gi, "").replace(/\d+th Gen /gi, "").replace(/\d+nd Gen /gi, "").replace(/\d+rd Gen /gi, "").replace(/\d+st Gen /gi, "").replace(/Core /gi, "").replace(/Processor/gi, "").replace(/\s+/g, " ").trim();
@@ -86,9 +87,13 @@ Singleton {
         onTriggered: {
             stat.reload();
             meminfo.reload();
-            storage.running = true;
-            gpuUsage.running = true;
-            sensors.running = true;
+            if (root._tick % 5 === 0) {
+                gpuUsage.running = true;
+                sensors.running = true;
+            }
+            if (root._tick % 30 === 0)
+                storage.running = true;
+            root._tick++;
         }
     }
 
