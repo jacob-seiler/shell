@@ -63,6 +63,7 @@ JsonObject {
         property bool activeWindow: true
         property bool tray: true
         property bool statusIcons: true
+        property bool clock: true
     }
 
     component Workspaces: JsonObject {
@@ -113,5 +114,6 @@ JsonObject {
         property int batteryWidth: 250
         property int networkWidth: 320
         property int kbLayoutWidth: 320
+        property int calendarWidth: 280
     }
 }
