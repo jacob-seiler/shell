@@ -200,6 +200,7 @@ Singleton {
 
     function _resetAndCheck(): void {
         _cancelRamp();
+        _rampCancelledThisNight = false;
         _checkSchedule();
         _scheduleNext();
     }
@@ -315,6 +316,10 @@ Singleton {
             if (Config.services.nightColorSchedule === "sunset")
                 root._resetAndCheck();
         }
+    }
+
+    LogindManager {
+        onResumed: root._resetAndCheck()
     }
 
     Component.onCompleted: {
