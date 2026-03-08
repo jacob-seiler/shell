@@ -95,7 +95,7 @@ Item {
                         else
                             currentItem.modelData.onClicked(list.currentList);
                     } else {
-                        Apps.launch(currentItem.modelData);
+                        Apps.launch(currentItem.modelData, true);
                         root.visibilities.launcher = false;
                     }
                 }
